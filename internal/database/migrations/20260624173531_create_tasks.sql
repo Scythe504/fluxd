@@ -1,21 +1,19 @@
 -- +goose Up
-CREATE EXTENSION IF NOT EXISTS pg_uuidv7;
-
 CREATE TYPE task_type AS ENUM ('cron', 'one_off', 'event_driven');
 CREATE TYPE task_unit AS ENUM ('cpu', 'gpu');
 CREATE TYPE task_status AS ENUM ('failed', 'queued', 'running', 'completed');
 
 CREATE TABLE IF NOT EXISTS tasks (
   id UUID PRIMARY KEY DEFAULT uuidv7(),
-  payload_slug VARCHAR(255),
+  payload_slug VARCHAR(255) NOT NULL,
   payload JSONB NOT NULL DEFAULT '{}'::jsonb,
 
   retry_count INT DEFAULT 0,
   max_retry_count INT DEFAULT 3,
   last_error JSONB,
 
-  execution_schedule_time TIMESTAMPTZ,
-  cron_expression VARCHAR(100) DEFAULT NULL,
+  execution_schedule_time    TIMESTAMPTZ,
+  cron_expression            VARCHAR(100) DEFAULT NULL,
   execution_interval_seconds INT DEFAULT 900,
 
   task_type task_type NOT NULL,

@@ -64,7 +64,7 @@ func (s *service) migrate() error {
 	db := stdlib.OpenDBFromPool(s.pool)
 	defer db.Close()
 
-	if err := goose.SetDialect("sqlite3"); err != nil {
+	if err := goose.SetDialect("postgres"); err != nil {
 		return err
 	}
 
