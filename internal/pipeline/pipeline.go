@@ -40,7 +40,6 @@ type Registry struct {
 }
 
 func (p *Pipeline) GetPipe(ctx context.Context, slug string) (*Pipe, error) {
-	// 1. Fast path: Read Lock
 	p.registry.mu.RLock()
 	pipe, ok := p.registry.processes[slug]
 	p.registry.mu.RUnlock()
@@ -48,7 +47,6 @@ func (p *Pipeline) GetPipe(ctx context.Context, slug string) (*Pipe, error) {
 		return pipe, nil
 	}
 
-	// 2. Slow path: Write Lock
 	p.registry.mu.Lock()
 	defer p.registry.mu.Unlock()
 

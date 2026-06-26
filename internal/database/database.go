@@ -2,20 +2,24 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/pressly/goose/v3"
 )
 
 type Service interface {
 	GetTask(ctx context.Context) (Task, error)
+	FailTask(ctx context.Context, id uuid.UUID, lastError json.RawMessage, timestamp time.Time) (uuid.UUID, error)
+	CompleteTask(ctx context.Context, id uuid.UUID, timestamp time.Time) (uuid.UUID, error)
 
 	Health() map[string]string
 	Close()
@@ -51,7 +55,7 @@ func New(ctx context.Context) Service {
 	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("Ping: %v", err)
 	}
-	
+
 	dbInstance = &service{
 		pool: pool,
 	}

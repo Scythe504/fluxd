@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -22,12 +23,27 @@ type VideoPayload struct {
 	ExtractAudio bool   `json:"extract_audio"`
 }
 
+type WorkerResultMessage string
+
+const (
+	WorkerResultSuccessMesssage WorkerResultMessage = "success"
+	WorkerResultFailedMessage   WorkerResultMessage = "failed"
+	WorkerResultACKMessage      WorkerResultMessage = "ack"
+)
+
 type WorkerResult struct {
-	TaskID       string `json:"task_id"`
-	Status       string `json:"status"`
-	BytesWritten int    `json:"bytes_written"`
-	TimeTakenMs  int64  `json:"time_taken_ms"`
-	Error        string `json:"error,omitempty"`
+	TaskID        string              `json:"task_id"`
+	ResultMessage WorkerResultMessage `json:"result_message"`
+	Error         json.RawMessage     `json:"error,omitempty"`
+	Timestamp     time.Time           `json:"timestamp,omitempty"`
+}
+
+var stdoutMu sync.Mutex
+
+func writeResult(res WorkerResult) {
+	stdoutMu.Lock()
+	defer stdoutMu.Unlock()
+	_ = json.NewEncoder(os.Stdout).Encode(res)
 }
 
 func main() {
@@ -38,34 +54,37 @@ func main() {
 			continue
 		}
 
-		start := time.Now()
-
 		var wp WorkerPayload
 		if err := json.Unmarshal(line, &wp); err != nil {
 			log.Printf("Failed to decode worker payload wrapper: %v", err)
 			continue
 		}
 
-		var payload VideoPayload
-		if err := json.Unmarshal(wp.Payload, &payload); err != nil {
-			log.Printf("Failed to decode video payload: %v", err)
-			writeError(wp.TaskID, err.Error(), time.Since(start).Milliseconds())
-			continue
-		}
+		// 1. Immediately write ACK back to stdout
+		writeResult(WorkerResult{
+			TaskID:        wp.TaskID,
+			ResultMessage: WorkerResultACKMessage,
+			Timestamp:     time.Now(),
+		})
 
-		// Simulate Work (e.g., FFMPEG processing)
-		time.Sleep(2 * time.Second) // Fake processing time
+		// 2. Process task asynchronously in a goroutine
+		go func(taskID string, rawPayload json.RawMessage) {
+			var payload VideoPayload
+			if err := json.Unmarshal(rawPayload, &payload); err != nil {
+				log.Printf("Failed to decode video payload: %v", err)
+				writeError(taskID, err.Error())
+				return
+			}
 
-		result := WorkerResult{
-			TaskID:       wp.TaskID,
-			Status:       "success",
-			BytesWritten: 10485760, // 10MB simulated
-			TimeTakenMs:  time.Since(start).Milliseconds(),
-		}
+			// Simulate Work (e.g., FFMPEG processing)
+			time.Sleep(2 * time.Second) // Fake processing time
 
-		if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
-			log.Printf("Failed to write result to stdout: %v", err)
-		}
+			writeResult(WorkerResult{
+				TaskID:        taskID,
+				ResultMessage: WorkerResultSuccessMesssage,
+				Timestamp:     time.Now(),
+			})
+		}(wp.TaskID, wp.Payload)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -73,12 +92,12 @@ func main() {
 	}
 }
 
-func writeError(taskID string, errMsg string, elapsed int64) {
-	result := WorkerResult{
-		TaskID:       taskID,
-		Status:       "failed",
-		Error:        errMsg,
-		TimeTakenMs:  elapsed,
-	}
-	_ = json.NewEncoder(os.Stdout).Encode(result)
+func writeError(taskID string, errMsg string) {
+	errBytes, _ := json.Marshal(errMsg)
+	writeResult(WorkerResult{
+		TaskID:        taskID,
+		ResultMessage: WorkerResultFailedMessage,
+		Error:         errBytes,
+		Timestamp:     time.Now(),
+	})
 }

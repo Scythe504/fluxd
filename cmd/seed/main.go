@@ -30,6 +30,8 @@ func randInt(max *big.Int) *big.Int {
 	return r
 }
 
+const seedCount = 10
+
 const (
 	slugVidTranscoding payloadSlug = "video_transcode"
 	slugCsvToPdf       payloadSlug = "csv_to_pdf"
@@ -146,9 +148,9 @@ func main() {
 
 	maxInt := big.NewInt(2)
 
-	tasks := make([]database.Task, 20)
+	tasks := make([]database.Task, seedCount)
 
-	for i := range 20 {
+	for i := range len(tasks) {
 		rInt := randInt(maxInt).Int64()
 
 		switch int(rInt) {
@@ -166,7 +168,7 @@ func main() {
 	}
 	identifier := pgx.Identifier{"tasks"}
 	columns := []string{"allocated_unit", "payload", "payload_slug", "task_type"}
-	rowSrc := pgx.CopyFromSlice(20, func(i int) ([]any, error) {
+	rowSrc := pgx.CopyFromSlice(len(tasks), func(i int) ([]any, error) {
 		return []any{
 			tasks[i].AllocatedUnit,
 			tasks[i].Payload,
@@ -187,7 +189,7 @@ func main() {
 	defer tx.Rollback(ctx)
 
 	rowsAffected, err := tx.CopyFrom(ctx, identifier, columns, rowSrc)
-	if err != nil || rowsAffected != 20 {
+	if err != nil || rowsAffected != int64(len(tasks)) {
 		log.Fatal(err)
 	}
 
