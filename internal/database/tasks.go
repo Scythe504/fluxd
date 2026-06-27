@@ -9,18 +9,27 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (t *Task) Scan(row pgx.Row) error {
-	return row.Scan(
-		&t.ID, &t.PayloadSlug, &t.Payload, &t.RetryCount,
-		&t.MaxRetryCount, &t.LastError, &t.ExecutionScheduleTime,
-		&t.ExecutionIntervalSeconds, &t.CronExpression, &t.TaskType,
-		&t.Status, &t.AllocatedUnit, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt,
-	)
+func (s *service) GetTask(ctx context.Context, taskId string) (Task, error) {
+	query := `SELECT
+			id, payload_slug, payload, retry_count, max_retry_count, 
+			last_error, execution_schedule_time, execution_interval_seconds,
+			cron_expression, task_type, status, allocated_unit, assigned_node_id,
+			created_at, updated_at, deleted_at
+		FROM tasks
+		WHERE id = $1
+	`
+
+	rows, err := s.pool.Query(ctx, query, taskId)
+	if err != nil {
+		return Task{}, err
+	}
+
+	return pgx.CollectOneRow(rows, pgx.RowToStructByName[Task])
 }
 
-func (s *service) GetTask(ctx context.Context) ([]Task, error) {
+func (s *service) GetTasks(ctx context.Context, machineID string) ([]Task, error) {
 	query := `UPDATE tasks
-			SET status = $1
+			SET status = $1, assigned_node_id = $2, updated_at = now()
 			WHERE id IN (
 				SELECT id
 				FROM tasks
@@ -31,14 +40,15 @@ func (s *service) GetTask(ctx context.Context) ([]Task, error) {
 			)
 			RETURNING id, payload_slug, payload, retry_count, max_retry_count, 
 				last_error, execution_schedule_time, execution_interval_seconds,
-				cron_expression, task_type, status, allocated_unit, 
+				cron_expression, task_type, status, allocated_unit, assigned_node_id,
 				created_at, updated_at, deleted_at
 		`
 	var tasks []Task
-	rows, err := s.pool.Query(ctx, query, TaskStatusRunning)
+	rows, err := s.pool.Query(ctx, query, TaskStatusRunning, machineID)
 	if err != nil {
 		return tasks, err
 	}
+	defer rows.Close()
 
 	tasks, err = pgx.CollectRows(rows, pgx.RowToStructByName[Task])
 	if err != nil {
@@ -70,6 +80,10 @@ func (s *service) FailTask(ctx context.Context, id uuid.UUID, lastError json.Raw
 		status = CASE
 			WHEN COALESCE(retry_count, 0) + 1 >= COALESCE(max_retry_count, 3) THEN 'failed'::task_status
 			ELSE 'queued'::task_status
+		END,
+		assigned_node_id = CASE
+			WHEN COALESCE(retry_count, 0) + 1 >= COALESCE(max_retry_count, 3) THEN assigned_node_id
+			ELSE NULL
 		END,
 		last_error = $1,
 		updated_at = $2

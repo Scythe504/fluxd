@@ -7,9 +7,13 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/scythe504/kronos/internal/nodes"
 )
 
 func (p *Pipeline) Start(ctx context.Context) {
+	nodeCfg := nodes.GetNodeConfig(ctx)
+	machineID := nodeCfg.MachineID
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -17,7 +21,7 @@ func (p *Pipeline) Start(ctx context.Context) {
 		default:
 		}
 
-		tasks, err := p.db.GetTask(ctx)
+		tasks, err := p.db.GetTasks(ctx, machineID)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				time.Sleep(1 * time.Second)

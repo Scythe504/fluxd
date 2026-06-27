@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   task_type task_type NOT NULL,
   status task_status NOT NULL DEFAULT 'queued',
   allocated_unit task_unit NOT NULL DEFAULT 'cpu',
+  assigned_node_id VARCHAR(64) DEFAULT NULL,
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),

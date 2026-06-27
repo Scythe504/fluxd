@@ -17,9 +17,15 @@ import (
 )
 
 type Service interface {
-	GetTask(ctx context.Context) ([]Task, error)
+	GetTask(ctx context.Context, taskId string) (Task, error)
+	GetTasks(ctx context.Context, machineID string) ([]Task, error)
 	FailTask(ctx context.Context, id uuid.UUID, lastError json.RawMessage, timestamp time.Time) (uuid.UUID, error)
 	CompleteTask(ctx context.Context, id uuid.UUID, timestamp time.Time) (uuid.UUID, error)
+
+	RegisterNode(ctx context.Context, n Node) (string, error)
+	UpdateNodeStatus(ctx context.Context, machineID string, status NodeStatus) (string, error)
+	GetNode(ctx context.Context, machineID string) (Node, error)
+	GetNodes(ctx context.Context, page int, perPage int) ([]Node, error)
 
 	Health() map[string]string
 	Close()

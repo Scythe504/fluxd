@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS nodes (
 
   ip_addr VARCHAR(45) NOT NULL,
   hostname VARCHAR(255) NOT NULL,
-  cloud_region VARCHAR(255),
-  cloud_platform VARCHAR(45),
+  cloud_region VARCHAR(255) NOT NULL DEFAULT '',
+  cloud_platform VARCHAR(45) NOT NULL DEFAULT '',
 
   task_unit task_unit NOT NULL,
   status node_status NOT NULL DEFAULT 'idle',

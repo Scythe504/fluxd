@@ -45,6 +45,7 @@ type Task struct {
 	TaskType                 TaskType        `db:"task_type" json:"task_type"`
 	Status                   TaskStatus      `db:"status" json:"status"`
 	AllocatedUnit            TaskUnit        `db:"allocated_unit" json:"allocated_unit"`
+	AssignedNodeID           *string         `db:"assigned_node_id" json:"assigned_node_id"`
 	CreatedAt                time.Time       `db:"created_at" json:"created_at"`
 	UpdatedAt                time.Time       `db:"updated_at" json:"updated_at"`
 	DeletedAt                sql.NullTime    `db:"deleted_at" json:"deleted_at"`
