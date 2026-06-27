@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/scythe504/fluxd/internal/pipeline"
+	"github.com/scythe504/kronos/internal/pipeline"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/scythe504/fluxd
+module github.com/scythe504/kronos
 
 go 1.26.4
 

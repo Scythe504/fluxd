@@ -14,7 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
-	"github.com/scythe504/fluxd/internal/database"
+	"github.com/scythe504/kronos/internal/database"
 
 	_ "github.com/joho/godotenv/autoload"
 )

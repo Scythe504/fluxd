@@ -1,1 +1,1 @@
-# fluxd
+# kronos daemon

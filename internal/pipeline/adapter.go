@@ -3,7 +3,7 @@ package pipeline
 import (
 	"encoding/json"
 
-	"github.com/scythe504/fluxd/internal/database"
+	"github.com/scythe504/kronos/internal/database"
 )
 
 type WorkerPayload struct {
