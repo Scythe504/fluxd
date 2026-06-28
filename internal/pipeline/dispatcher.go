@@ -12,7 +12,7 @@ func (p *Pipeline) Start(ctx context.Context) {
 	nodeCfg := nodes.GetNodeConfig(ctx)
 	machineID := nodeCfg.MachineID
 
-	pollCount := 0
+	pollCount := 1
 
 	for {
 		select {
@@ -29,13 +29,14 @@ func (p *Pipeline) Start(ctx context.Context) {
 		}
 
 		if len(tasks) == 0 {
-			pollCount++
-			time.Sleep(JitterTime(pollCount))
+			retryCount := min(5, pollCount)
+			timeDuration := JitterTime(retryCount).Seconds()
+			time.Sleep(time.Duration(timeDuration))
 			continue
 		}
 
 		// reset pollCount when we get new payloads
-		pollCount = 0
+		pollCount = 1
 		for _, task := range tasks {
 			go func() {
 				adapted, err := AdaptTask(task)

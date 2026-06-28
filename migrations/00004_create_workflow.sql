@@ -1,0 +1,42 @@
+-- +goose Up
+CREATE TYPE trigger_type AS ENUM ('cron', 'webhook');
+CREATE TYPE trigger_condition AS ENUM ('on_success', 'on_failure', 'always');
+
+CREATE TABLE IF NOT EXISTS workflows (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  name VARCHAR(255) NOT NULL,
+  trigger_type trigger_type NOT NULL DEFAULT 'webhook',
+  trigger_config JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS workflow_steps (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  workflow_id UUID NOT NULL REFERENCES workflows(id),
+  slug VARCHAR(255) NOT NULL REFERENCES workers(slug),
+  condition trigger_condition NOT NULL DEFAULT 'on_success',
+  step_order INT NOT NULL,
+  default_payload JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX index_workflow_steps_workflow_id ON workflow_steps (workflow_id);
+
+CREATE TABLE IF NOT EXISTS task_chains (
+  id UUID PRIMARY KEY DEFAULT uuidv7(),
+  trigger_task_id UUID NOT NULL REFERENCES tasks(id),
+  follow_on_task_id UUID NOT NULL REFERENCES tasks(id),
+  triggerer_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+  condition trigger_condition NOT NULL DEFAULT 'on_success'
+);
+
+CREATE INDEX index_task_chains_trigger_task_id ON task_chains (trigger_task_id);
+
+-- +goose Down
+DROP INDEX IF EXISTS index_task_chains_trigger_task_id;
+DROP TABLE IF EXISTS task_chains;
+DROP INDEX IF EXISTS index_workflow_steps_workflow_id;
+DROP TABLE IF EXISTS workflow_steps;
+DROP TABLE IF EXISTS workflows;
+DROP TYPE IF EXISTS trigger_condition;
+DROP TYPE IF EXISTS trigger_type;

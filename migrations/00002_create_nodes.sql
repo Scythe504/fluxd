@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   machine_id VARCHAR(64) PRIMARY KEY,
 
   kernel VARCHAR(64) NOT NULL,
-  architecture VARCHAR(20) NOT NULL,
+  architecture VARCHAR(64) NOT NULL,
 
   gpu_vram_kb BIGINT,
   gpu_model VARCHAR(64),
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   task_unit task_unit NOT NULL,
   status node_status NOT NULL DEFAULT 'idle',
 
-  node_version VARCHAR(20) NOT NULL,
+  node_version VARCHAR(64) NOT NULL,
   
   last_heartbeat_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   registered_at TIMESTAMPTZ NOT NULL DEFAULT now(),

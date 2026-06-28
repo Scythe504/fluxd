@@ -30,7 +30,7 @@ func randInt(max *big.Int) *big.Int {
 	return r
 }
 
-const seedCount = 1000000
+const seedCount = 100000
 
 const (
 	slugVidTranscoding payloadSlug = "video_transcode"

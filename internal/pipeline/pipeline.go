@@ -15,9 +15,9 @@ type Pipeline struct {
 	registry Registry
 }
 
-func Init(ctx context.Context) *Pipeline {
+func Init(db database.Service) *Pipeline {
 	pipeline := &Pipeline{
-		db: database.New(ctx),
+		db: db,
 		registry: Registry{
 			processes: make(map[string]*Pipe),
 			mu:        sync.RWMutex{},
