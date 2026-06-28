@@ -52,7 +52,7 @@ func GetNodeConfig(ctx context.Context) *database.Node {
 	nodeConfig = &database.Node{
 		MachineID:    sysInfo.MachineID,
 		Kernel:       sysInfo.Kernel,
-		Architecture: sysInfo.Kernel,
+		Architecture: sysInfo.Arch,
 		GPURamKB:     &sysInfo.GPURamKB,
 		GPUModel:     &sysInfo.GPUModel,
 		CPUModel:     sysInfo.CPUModel,
@@ -68,6 +68,7 @@ func GetNodeConfig(ctx context.Context) *database.Node {
 type SystemInfo struct {
 	MachineID string
 	Kernel    string
+	Arch 			string
 	GPURamKB  int64
 	GPUModel  string
 	CPUModel  string
@@ -89,6 +90,7 @@ func GetSystemInfo(ctx context.Context) (*SystemInfo, error) {
 	}
 	system.MachineID = hostInfo.HostID
 	system.Kernel = hostInfo.KernelVersion
+	system.Arch = hostInfo.KernelArch
 	system.Hostname = hostInfo.Hostname
 
 	// CPU info

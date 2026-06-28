@@ -21,20 +21,7 @@ CREATE TABLE IF NOT EXISTS workflow_steps (
 );
 
 CREATE INDEX index_workflow_steps_workflow_id ON workflow_steps (workflow_id);
-
-CREATE TABLE IF NOT EXISTS task_chains (
-  id UUID PRIMARY KEY DEFAULT uuidv7(),
-  trigger_task_id UUID NOT NULL REFERENCES tasks(id),
-  follow_on_task_id UUID NOT NULL REFERENCES tasks(id),
-  triggerer_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-  condition trigger_condition NOT NULL DEFAULT 'on_success'
-);
-
-CREATE INDEX index_task_chains_trigger_task_id ON task_chains (trigger_task_id);
-
 -- +goose Down
-DROP INDEX IF EXISTS index_task_chains_trigger_task_id;
-DROP TABLE IF EXISTS task_chains;
 DROP INDEX IF EXISTS index_workflow_steps_workflow_id;
 DROP TABLE IF EXISTS workflow_steps;
 DROP TABLE IF EXISTS workflows;
