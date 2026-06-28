@@ -158,22 +158,19 @@ func main() {
 			tasks[i].AllocatedUnit = database.TaskUnitGPU
 			tasks[i].Payload = getVideoPayload()
 			tasks[i].PayloadSlug = string(slugVidTranscoding)
-			tasks[i].TaskType = database.TaskTypeOneOff
 		case 1:
 			tasks[i].AllocatedUnit = database.TaskUnitCPU
 			tasks[i].Payload = getCsvPayload()
 			tasks[i].PayloadSlug = string(slugCsvToPdf)
-			tasks[i].TaskType = database.TaskTypeOneOff
 		}
 	}
 	identifier := pgx.Identifier{"tasks"}
-	columns := []string{"allocated_unit", "payload", "payload_slug", "task_type"}
+	columns := []string{"allocated_unit", "payload", "payload_slug"}
 	rowSrc := pgx.CopyFromSlice(len(tasks), func(i int) ([]any, error) {
 		return []any{
 			tasks[i].AllocatedUnit,
 			tasks[i].Payload,
 			tasks[i].PayloadSlug,
-			tasks[i].TaskType,
 		}, nil
 	})
 

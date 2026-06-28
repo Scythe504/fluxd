@@ -12,9 +12,8 @@ import (
 func (s *service) GetTask(ctx context.Context, taskId string) (Task, error) {
 	query := `SELECT
 			id, payload_slug, payload, retry_count, max_retry_count, 
-			last_error, execution_schedule_time, execution_interval_seconds,
-			cron_expression, next_retry_at, task_type, status, allocated_unit, assigned_node_id,
-			created_at, updated_at, deleted_at
+			last_error, next_retry_at, status, allocated_unit, assigned_node_id,
+			workflow_run_id, workflow_step_id, created_at, updated_at, deleted_at
 		FROM tasks
 		WHERE id = $1
 	`
@@ -40,9 +39,8 @@ func (s *service) GetTasks(ctx context.Context, machineID string) ([]Task, error
 				FOR UPDATE SKIP LOCKED
 			)
 			RETURNING id, payload_slug, payload, retry_count, max_retry_count, 
-				last_error, execution_schedule_time, execution_interval_seconds,
-				cron_expression, next_retry_at, task_type, status, allocated_unit, assigned_node_id,
-				created_at, updated_at, deleted_at
+				last_error, next_retry_at, status, allocated_unit, assigned_node_id,
+				workflow_run_id, workflow_step_id, created_at, updated_at, deleted_at
 		`
 	var tasks []Task
 	rows, err := s.pool.Query(ctx, query, TaskStatusRunning, machineID)
